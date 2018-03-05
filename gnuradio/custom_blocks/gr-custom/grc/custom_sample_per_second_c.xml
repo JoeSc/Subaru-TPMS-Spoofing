@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<block>
+  <name>sample_per_second_c</name>
+  <key>custom_sample_per_second_c</key>
+  <category>custom</category>
+  <import>import custom</import>
+  <make>custom.sample_per_second_c()</make>
+
+  <sink>
+    <name>in</name>
+    <type>complex</type>
+  </sink>
+
+  <source>
+    <name>out</name>
+    <type>complex</type>
+  </source>
+</block>

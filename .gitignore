@@ -1,0 +1,8 @@
+gnuradio/custom_blocks/gnuradio-custom/
+gnuradio/custom_blocks/gr-custom/build/
+*.swp
+*.swo
+*.o
+*.elf
+*.hex
+*.lst

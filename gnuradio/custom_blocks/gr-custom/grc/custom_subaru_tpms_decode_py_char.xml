@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<block>
+  <name>subaru_tpms_decode_py_char</name>
+  <key>custom_subaru_tpms_decode_py_char</key>
+  <category>custom</category>
+  <import>import custom</import>
+  <make>custom.subaru_tpms_decode_py_char($samp_rate)</make>
+
+  <param>
+    <name>Sample Rate</name>
+    <key>samp_rate</key>
+	<value>samp_rate</value>
+    <type>int</type>
+  </param>
+  <sink>
+    <name>in</name>
+    <type>byte</type>
+  </sink>
+
+</block>
