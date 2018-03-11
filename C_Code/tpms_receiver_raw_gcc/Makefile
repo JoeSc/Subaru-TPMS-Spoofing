@@ -50,11 +50,19 @@ clean:
 		$(OBJCOPY) -j .text -j .data -O binary $< $@
 
 prog: all
-		avrdude -c arduino -p atmega328p -P /dev/ttyUSB0 -b 57600 -v -Uflash:w:$(PROG).hex:i
-
-win_prog: all
-	  wrun /mnt/c/Program\ Files\ \(x86\)/Arduino/hardware/tools/avr/bin/avrdude.exe '-C "C:\Program Files (x86)\Arduino\hardware\tools\avr\etc\avrdude.conf" -c arduino -p atmega328p -P COM4 -b 57600 -v -Uflash:w:$(PROG).hex:i'
-
+	@if grep -qE "(Microsoft|WSL)" /proc/version &&> /dev/null ; then \
+		avrdude -c arduino -p atmega328p -P /dev/ttyS4 -b 57600 -v -Uflash:w:$(PROG).hex:i; \
+	else \
+		avrdude -c arduino -p atmega328p -P /dev/ttyUSB0 -b 57600 -v -Uflash:w:$(PROG).hex:i; \
+	fi;
 
 terminal:
-	screen /dev/ttyUSB0 57600
+	@if grep -qE "(Microsoft|WSL)" /proc/version &&> /dev/null ; then \
+	    if [ $$(stat -c %A /dev/ttyS4) = "crw-rw-rw-" ]; then \
+	        screen /dev/ttyS4 57600; \
+	    else \
+	        echo "Check permissions of /dev/ttyS4"; \
+	    fi \
+	else \
+	    screen /dev/ttyUSB0 57600; \
+	fi

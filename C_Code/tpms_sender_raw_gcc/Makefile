@@ -24,10 +24,12 @@ OBJ := $(SRCS:.c=.o) $(SRCS:.cpp=.o)
 all: $(PROG).elf $(PROG).hex $(PROG).lst
 
 %.o: %.c
-		$(CC) $(CPPFLAGS) -c $<
+	    @echo CC $<
+		@ $(CC) $(CPPFLAGS) -c $<
 
 %.o: %.cpp
-		$(CXX) $(CPPFLAGS) -c $<
+	    @echo CPP $<
+		@ $(CXX) $(CPPFLAGS) -c $<
 
 %.elf: $(OBJ)
 		$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^ $(LIBS)
@@ -38,23 +40,35 @@ clean:
 		rm -rf *.o *.elf *.lst *.map *.sym *.lss *.eep *.srec *.bin *.hex
 
 %.lst: %.elf
-		$(OBJDUMP) -h -S $< > $@
+		@ $(OBJDUMP) -h -S $< > $@
 
 %.hex: %.elf
-		$(OBJCOPY) -j .text -j .data -O ihex $< $@
+		@ $(OBJCOPY) -j .text -j .data -O ihex $< $@
 
 %.srec: %.elf
-		$(OBJCOPY) -j .text -j .data -O srec $< $@
+		@ $(OBJCOPY) -j .text -j .data -O srec $< $@
 
 %.bin: %.elf
-		$(OBJCOPY) -j .text -j .data -O binary $< $@
+		@ $(OBJCOPY) -j .text -j .data -O binary $< $@
 
 prog: all
-		avrdude -c arduino -p atmega328p -P /dev/ttyUSB0 -b 57600 -v -Uflash:w:$(PROG).hex:i
-
-win_prog: all
-	  wrun /mnt/c/Program\ Files\ \(x86\)/Arduino/hardware/tools/avr/bin/avrdude.exe '-C "C:\Program Files (x86)\Arduino\hardware\tools\avr\etc\avrdude.conf" -c arduino -p atmega328p -P COM4 -b 57600 -v -Uflash:w:$(PROG).hex:i'
-
+	@if grep -qE "(Microsoft|WSL)" /proc/version &> /dev/null ; then \
+	    if [ $$(stat -c %A /dev/ttyS4) = "crw-rw-rw-" ]; then \
+			avrdude -c arduino -p atmega328p -P /dev/ttyS4 -b 57600 -v -Uflash:w:$(PROG).hex:i; \
+	    else \
+	        echo "Check permissions of /dev/ttyS4, need to be 666"; \
+	    fi \
+	else \
+		avrdude -c arduino -p atmega328p -P /dev/ttyUSB0 -b 57600 -v -Uflash:w:$(PROG).hex:i; \
+	fi;
 
 terminal:
-	screen /dev/ttyUSB0 9600
+	@if grep -qE "(Microsoft|WSL)" /proc/version &> /dev/null ; then \
+	    if [ $$(stat -c %A /dev/ttyS4) = "crw-rw-rw-" ]; then \
+	        screen /dev/ttyS4 57600; \
+	    else \
+	        echo "Check permissions of /dev/ttyS4, need to be 666"; \
+	    fi \
+	else \
+	    screen /dev/ttyUSB0 57600; \
+	fi

@@ -63,9 +63,8 @@ namespace gr {
 	{
 		uint32_t prepend = packet >> 34;
 		uint32_t addr = (packet >> 10) & 0xffffff;
-		uint32_t not_addr = (~addr) & 0xffffff;
 		uint32_t pressure = packet & 0x3ff;
-		sprintf(buffer, " pre = %x  addr = %x (%x) pressure = %.1f psi", prepend, addr, not_addr, pressure/10.0);
+		sprintf(buffer, " pre = %x  addr = %x  %.1f psi", prepend, addr, pressure/20.0);
 		return buffer;
 	}
 
@@ -81,7 +80,6 @@ namespace gr {
 	  int8_t transition;
 	  for(int i=0; i<noutput_items; i++, sample++)
 	  {
-		//printf("STATE = %d @ %ld\n", packet_state, sample);
 		transition = in[i] - last_level;
         last_level = in[i];
 
@@ -90,7 +88,6 @@ namespace gr {
 
 		if(packet_state == state_waiting)
 		{
-			//printf("STATE = WAITING @ %ld\n", sample);
 			if (transition == 1)
 			{
 				transition_cnt = 0;
@@ -192,25 +189,18 @@ namespace gr {
 				if (transition == 1)
 				{
 					//packet_data |= (1ULL << (64 - packet_bit_cnt));
-					packet_data = (packet_data << 1) | 1;
-				} else {
 					packet_data = (packet_data << 1) | 0;
+				} else {
+					packet_data = (packet_data << 1) | 1;
 				}
 			} else if ((time_since > (clk_period * 1.5)) && (packet_bit_cnt != 37)) {
-				//uint64_t packet_data = packet_data >> (63 - (new_man_data_cnt - 1));
 				printf("BAD      Packet Number %d @ %8d  0x%" PRIx64 "\n", packet_number++, transitions[transition_cnt - 1], packet_data);
 				packet_state = state_waiting;
 			} else if ((time_since > (clk_period * 1.5)) && (packet_bit_cnt == 37)) {
-				//uint64_t packet_data = packet_data >> (63 - (new_man_data_cnt - 1));
 				printf("GOOD     Packet Number %d @ %8d  0x%" PRIx64 " %s\n", packet_number++, transitions[transition_cnt - 1], packet_data, packet_to_string(packet_data));
 				packet_state = state_waiting;
 			}
 		}
-
-
-
-
-
 	  }
 
       // Tell runtime system how many output items we produced.

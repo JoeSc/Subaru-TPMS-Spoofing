@@ -40,9 +40,9 @@
 #define CC1101_GDO0         16      // PD2 = INT0
 
 // On-board LED
-#define ONBOARD_LED 15
-#define LED      ONBOARD_LED
-#define INIT_ONBOARD_LED()    pinMode(ONBOARD_LED, OUTPUT)
+//#define ONBOARD_LED 15
+//#define LED      ONBOARD_LED
+//#define INIT_ONBOARD_LED()    pinMode(ONBOARD_LED, OUTPUT)
 
 // LD-BOARD definitions
 #define HGM     20

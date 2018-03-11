@@ -3,7 +3,7 @@
 ##################################################
 # GNU Radio Python Flow Graph
 # Title: Top Block
-# Generated: Sat Mar 10 22:34:36 2018
+# Generated: Tue Mar 20 07:40:28 2018
 ##################################################
 
 if __name__ == '__main__':
@@ -25,6 +25,7 @@ from gnuradio.eng_option import eng_option
 from gnuradio.filter import firdes
 from grc_gnuradio import wxgui as grc_wxgui
 from optparse import OptionParser
+import chdir  # embedded python module
 import custom
 import wx
 
@@ -53,7 +54,7 @@ class top_block(grc_wxgui.top_block_gui):
         self.blocks_multiply_const_vxx_0_0 = blocks.multiply_const_vff((1/128., ))
         self.blocks_multiply_const_vxx_0 = blocks.multiply_const_vff((1/128., ))
         self.blocks_float_to_complex_0 = blocks.float_to_complex(1)
-        self.blocks_file_source_1 = blocks.file_source(gr.sizeof_char*1, '/home/pi/rtl_capture_low_pressure.bin', False)
+        self.blocks_file_source_1 = blocks.file_source(gr.sizeof_char*1, "../../Examples/1/rtl_sdr_example.c8", False)
         self.blocks_deinterleave_0 = blocks.deinterleave(gr.sizeof_char*1, 1)
         self.blocks_add_const_vxx_0_0 = blocks.add_const_vff((-127, ))
         self.blocks_add_const_vxx_0 = blocks.add_const_vff((-127, ))
@@ -86,6 +87,7 @@ class top_block(grc_wxgui.top_block_gui):
 
     def set_samp_rate(self, samp_rate):
         self.samp_rate = samp_rate
+        self.blocks_throttle_0.set_sample_rate(self.samp_rate)
 
     def get_decim_rate(self):
         return self.decim_rate

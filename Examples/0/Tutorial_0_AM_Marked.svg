@@ -16,7 +16,7 @@
    height="210.60242"
    viewBox="0 0 1446.905 210.60242"
    sodipodi:docname="Tutorial_0_AM_Marked.svg"
-   inkscape:version="0.92.1 r15371"
+   inkscape:version="0.92.2 (5c3e80d, 2017-08-06)"
    inkscape:export-filename="Tutorial_0_AM_Marked.png"
    inkscape:export-xdpi="160"
    inkscape:export-ydpi="160">
@@ -28,7 +28,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title></dc:title>
+        <dc:title />
       </cc:Work>
     </rdf:RDF>
   </metadata>
@@ -43,17 +43,17 @@
      guidetolerance="10"
      inkscape:pageopacity="0"
      inkscape:pageshadow="2"
-     inkscape:window-width="2560"
-     inkscape:window-height="1378"
+     inkscape:window-width="1920"
+     inkscape:window-height="1001"
      id="namedview3701"
      showgrid="false"
-     inkscape:zoom="2.8284271"
-     inkscape:cx="678.02851"
-     inkscape:cy="60.242579"
-     inkscape:window-x="-8"
-     inkscape:window-y="-8"
+     inkscape:zoom="0.99999999"
+     inkscape:cx="736.6534"
+     inkscape:cy="-60.397444"
+     inkscape:window-x="-9"
+     inkscape:window-y="-9"
      inkscape:window-maximized="1"
-     inkscape:current-layer="layer3"
+     inkscape:current-layer="layer2"
      fit-margin-top="0"
      fit-margin-left="0"
      fit-margin-right="0"
@@ -138,19 +138,6 @@
    style="letter-spacing:1px"
    id="tspan3876">raw bits = </tspan>1111010101010101010101010101010111101001100110100110100101101001010101100110100110101010101001100110011001010100000000</tspan></text>
     <text
-       xml:space="preserve"
-       style="font-style:normal;font-weight:normal;font-size:40px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none"
-       x="241.12692"
-       y="180.67654"
-       id="text3866"><tspan
-         id="tspan3864"
-         sodipodi:role="line"
-         x="241.12692"
-         y="180.67654"
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:13.33333302px;line-height:3.77952766px;font-family:'DejaVu Sans Mono';-inkscape-font-specification:'DejaVu Sans Mono';letter-spacing:2.73000002px"><tspan
-   style="letter-spacing:1px"
-   id="tspan3978">Manchester Decoded =</tspan>  0 1 0 1 0 0 1 0 0 1 1 0 0 1 1 1 1 0 1 0 0 1 0 0 0 0 0 0 1 0 1 0 1 0 1 1 1</tspan></text>
-    <text
        id="text3874"
        y="192.83066"
        x="410.34528"
@@ -160,7 +147,7 @@
          y="192.83066"
          x="410.34528"
          sodipodi:role="line"
-         id="tspan3872"> prepend  |              ADDR = 0x933d20 = ~0x6cc2df               |      0x157 (343)     |</tspan></text>
+         id="tspan3872">   prepend|                    ADDR = 0x6cc2df                     |      0x2a8 (680)     |</tspan></text>
     <rect
        style="opacity:0.4;fill:#0000ff;stroke:#0000ff"
        id="rect3980"
@@ -483,6 +470,19 @@
        height="11.25"
        x="357.64676"
        y="118.69845" />
+    <text
+       id="text3770"
+       y="181.63849"
+       x="241.12692"
+       style="font-style:normal;font-weight:normal;font-size:40px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none"
+       xml:space="preserve"><tspan
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:13.33333302px;line-height:3.77952766px;font-family:'DejaVu Sans Mono';-inkscape-font-specification:'DejaVu Sans Mono';letter-spacing:2.73000002px"
+         y="181.63849"
+         x="241.12692"
+         sodipodi:role="line"
+         id="tspan3768"><tspan
+   id="tspan3766"
+   style="letter-spacing:1px">Manchester Decoded =</tspan>  1 0 1 0 1 1 0 1 1 0 0 1 1 0 0 0 0 1 0 1 1 0 1 1 1 1 1 1 0 1 0 1 0 1 0 0 0</tspan></text>
   </g>
   <g
      inkscape:groupmode="layer"
@@ -500,12 +500,6 @@
          id="tspan3717"
          x="39.11565"
          y="148.38329"
-         style="font-size:20px">Start |                   Preamble        <tspan
-   style="letter-spacing:-1.92999995px"
-   id="tspan4556"> </tspan>        <tspan
-   style="letter-spacing:-1.73000002px"
-   id="tspan4645"> </tspan>|                                                         Data                                                           <tspan
-   style="letter-spacing:-3.25px"
-   id="tspan4691"> </tspan>|</tspan></text>
+         style="font-size:20px"> Start|               Preamble             |Start|                                                         Data                                                           |</tspan></text>
   </g>
 </svg>

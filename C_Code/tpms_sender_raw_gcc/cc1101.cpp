@@ -43,10 +43,6 @@ typedef uint8_t byte;
 // Wait until GDO0 line goes low
 #define wait_GDO0_low()  loop_until_bit_is_clear( PIN_GDO0, BIT_GDO0)
 
- /**
-  * PATABLE
-  */
-
 /**
  * CC1101
  * 
@@ -277,18 +273,12 @@ void CC1101::init()
   spi.init();                           // Initialize SPI interface
   //pinMode(GDO0, INPUT);                 // Config GDO0 as input
   DDR_GDO0 &= ~_BV(BIT_GDO0);
+  PORT_GDO0 |= (1 << _BV(BIT_GDO0));
 
   reset();                              // Reset CC1101
 
   // Configure PATABLE
-  setTxPowerAmp(PA_LowPower);
-
-  ////uint8_t paTable[8];
-  ////paTable[0] =0;// = {0x00, 0x51, 0, 0, 0, 0, 0, 0};
-  //uint8_t foo[8];
-  //foo[0] = 0;
-  //foo[1] = 0x51;
-  //writeBurstReg(CC1101_PATABLE, foo, 2);
+  setTxPowerAmp_OOK();
 }
 
 /**
@@ -306,7 +296,7 @@ bool CC1101::sendData(CCPACKET packet)
 {
   byte marcState;
   bool res = false;
-uint8_t mdmcfg2;
+  uint8_t mdmcfg2;
  
   // Declare to be in Tx state. This will avoid receiving packets whilst
   // transmitting
@@ -314,12 +304,6 @@ uint8_t mdmcfg2;
 
   // Enter RX state
   setRxState();
-
-  uint8_t foo[8];
-  foo[0] = 0x00;
-  foo[1] = 0x51;
-  writeBurstReg(CC1101_PATABLE, foo, 2);
-
 
   // Check that the RX state has been entered
   while (((marcState = readStatusReg(CC1101_MARCSTATE)) & 0x1F) != 0x0D)
@@ -330,7 +314,8 @@ uint8_t mdmcfg2;
 
   _delay_us(500);
 
-mdmcfg2 = readStatusReg(CC1101_MDMCFG2);
+  // Disable sending of syncword/preamble
+  mdmcfg2 = readStatusReg(CC1101_MDMCFG2);
   writeReg(CC1101_MDMCFG2,  mdmcfg2 & 0xf8);
 
   if (packet.length > 0)
@@ -361,6 +346,7 @@ mdmcfg2 = readStatusReg(CC1101_MDMCFG2);
   // Wait until the end of the packet transmission
   wait_GDO0_low();
 
+  // Put mdmcfg2 back to what it was
   writeReg(CC1101_MDMCFG2,  mdmcfg2);
 
   // Check that the TX FIFO is empty

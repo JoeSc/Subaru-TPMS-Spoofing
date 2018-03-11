@@ -200,8 +200,8 @@ enum RFSTATE
 
 #define CC1101_DEFVAL_IOCFG0     0x06        // GDO0 Output Pin Configuration
 #define CC1101_DEFVAL_FIFOTHR    0x07        // RX FIFO and TX FIFO Thresholds
-#define CC1101_DEFVAL_SYNC1      0x00        // Synchronization word, high byte
-#define CC1101_DEFVAL_SYNC0      0x00        // Synchronization word, low byte
+#define CC1101_DEFVAL_SYNC1      0xAA        // Synchronization word, high byte
+#define CC1101_DEFVAL_SYNC0      0xAF        // Synchronization word, low byte
 #define CC1101_DEFVAL_PKTLEN     0x10        // Packet Length
 #define CC1101_DEFVAL_PKTCTRL1   0x04        // Packet Automation Control
 #define CC1101_DEFVAL_PKTCTRL0   0x00        // Packet Automation Control
@@ -209,13 +209,14 @@ enum RFSTATE
 #define CC1101_DEFVAL_CHANNR     0x00        // Channel Number
 #define CC1101_DEFVAL_FSCTRL1    0x06        // Frequency Synthesizer Control
 #define CC1101_DEFVAL_FSCTRL0    0x00        // Frequency Synthesizer Control
+// Set frequency to 315MHz
 #define CC1101_DEFVAL_FREQ2      0x0c        // Frequency Control Word, High Byte
 #define CC1101_DEFVAL_FREQ1      0x1d        // Frequency Control Word, Middle Byte
 #define CC1101_DEFVAL_FREQ0      0x89        // Frequency Control Word, Low Byte
 
 #define CC1101_DEFVAL_MDMCFG4    0xF8   // Modem configuration. Speed = 4800 bps
 #define CC1101_DEFVAL_MDMCFG3    0x4a        // Modem Configuration
-#define CC1101_DEFVAL_MDMCFG2    0x34        // Modem Configuration
+#define CC1101_DEFVAL_MDMCFG2    0x36        // Modem Configuration
 #define CC1101_DEFVAL_MDMCFG1    0x02        // Modem Configuration
 #define CC1101_DEFVAL_MDMCFG0    0xF8        // Modem Configuration
 #define CC1101_DEFVAL_DEVIATN    0x15        // Modem Deviation Setting
@@ -521,6 +522,12 @@ class CC1101
     inline void setTxPowerAmp(uint8_t paLevel)
     {
       writeReg(CC1101_PATABLE, paLevel);
+    }
+
+    inline void setTxPowerAmp_OOK()
+    {
+      uint8_t paTable[2] = {0x00, 0xC0};
+      writeBurstReg(CC1101_PATABLE, paTable, 2);    
     }
 
     /**

@@ -214,7 +214,7 @@ enum RFSTATE
 #define CC1101_DEFVAL_FREQ0      0x89        // Frequency Control Word, Low Byte
 
 #define CC1101_DEFVAL_MDMCFG4    0xF8   // Modem configuration. Speed = 4800 bps
-#define CC1101_DEFVAL_MDMCFG3    0x4a        // Modem Configuration
+#define CC1101_DEFVAL_MDMCFG3    0x48        // Modem Configuration
 #define CC1101_DEFVAL_MDMCFG2    0x36        // Modem Configuration
 #define CC1101_DEFVAL_MDMCFG1    0x02        // Modem Configuration
 #define CC1101_DEFVAL_MDMCFG0    0xF8        // Modem Configuration
@@ -520,8 +520,13 @@ class CC1101
      */
     inline void setTxPowerAmp(uint8_t paLevel)
     {
-		uint8_t paTable[2] = {0x00, 0xC0};
-		writeBurstReg(CC1101_PATABLE, paTable, 2);    
+      writeReg(CC1101_PATABLE, paLevel);
+    }
+
+    inline void setTxPowerAmp_OOK()
+    {
+      uint8_t paTable[2] = {0x00, 0xC0};
+      writeBurstReg(CC1101_PATABLE, paTable, 2);    
     }
 
     /**

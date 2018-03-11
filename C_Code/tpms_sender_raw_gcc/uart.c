@@ -6,7 +6,7 @@
 #endif
 
 #ifndef BAUD
-#define BAUD 9600
+#define BAUD 57600
 #endif
 #include <util/setbaud.h>
 
@@ -38,4 +38,8 @@ int uart_putchar(char c, FILE *stream) {
 int uart_getchar(FILE *stream) {
 	loop_until_bit_is_set(UCSR0A, RXC0);
 	return UDR0;
+}
+
+int uart_get_available() {
+	return UCSR0A & RXC0;
 }

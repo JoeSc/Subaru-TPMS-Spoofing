@@ -1,8 +1,13 @@
 gnuradio/custom_blocks/gnuradio-custom/
 gnuradio/custom_blocks/gr-custom/build/
+gnuradio/custom_blocks/rtl-sdr/
+gnuradio/custom_blocks/gr-osmosdr/
+*.pyc
 *.swp
 *.swo
 *.o
 *.elf
 *.hex
 *.lst
+venv/
+cscope.out

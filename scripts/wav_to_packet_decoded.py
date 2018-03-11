@@ -3,7 +3,6 @@ import sys
 from collections import deque
 import logging
 import math
-import progressbar
 from struct import unpack
 
 logging.basicConfig()
@@ -13,66 +12,37 @@ statelog.setLevel(logging.WARNING)
 log = logging.getLogger("")
 log.setLevel(logging.WARNING)
 
-states = open("states.txt", "w")
-
-
-def dec2signed(val,size):
-    if val > ((1 << (size - 1 )) - 1):
-        val -= (1 << size)
-    return val
-
-
-def packet2hex(packet):
-    bit_string = ''
-    for bit in packet:
-        bit_string += str(bit)
-
-    packet = int(bit_string,2)
-    prepend = packet >> 34
-    addr = (packet >> 10) & 0xffffff
-    not_addr = int(format(addr,"023b").replace("0","Z").replace("1","0").replace("Z","1"), 2)
-
-    pressure = packet & 0x3ff
-    return "0x%x  pre = %x  addr = %x (%x) pressure = %.1f psi"%(packet, prepend, addr, not_addr, pressure/10)
-    return "0x%x"%int(bit_string,2)
-
-
+#states = open("states.txt", "w")
 
 sample_rate = 0
 bit_time = 125E-6
+
+def packet2hex(packet):
+    packet = int(packet,2)
+    prepend = packet >> 34
+    addr = (packet >> 10) & 0xffffff
+    pressure = packet & 0x3ff
+    return "0x%x  pre = %x  addr = %x  %.1f psi"%(packet, prepend, addr, pressure/20.)
+
 
 def signal_gen():
     global sample_rate
     f = wave.open(sys.argv[1])
     samplesize = f.getsampwidth() * 8
-    sample_rate = f.getframerate()
+    sample_rate = float(f.getframerate())
     channels = f.getnchannels()
-
-    ac_couple_samples = deque(maxlen = 100)
-
     signal_val = 0
 
-    #bar = progressbar.ProgressBar(redirect_stdout=True, max_value = f.getnframes())
     for samp in range(f.getnframes()):
-        #if samp % 1000 == 0:
-            #bar.update(samp)
-
-
         frame = f.readframes(1)
         mag = None
         if f.getsampwidth() == 1:
             mag, = unpack('B', frame)
-            #print("dec = %6d"%mag, end ="  ")
             mag =  (mag / 256)*2 - 1
         elif f.getsampwidth() == 2:
             mag, = unpack('<h', frame[0:2]) 
-            #print("dec = %6d"%mag, end ="  ")
-            mag /= 32767
+            mag /= 32767.
 
-
-
-        #ac_couple_samples.append(mag)
-        #ac_val = sum(ac_couple_samples) / float(len(ac_couple_samples))
         ac_val = 0
 
         # Include a slight offset so static will result in signal_val of 0
@@ -82,32 +52,30 @@ def signal_gen():
             signal_val = 0
 
         yield samp, mag, signal_val, ac_val
-    #bar.finish()
 
 
 last_signal_val = 0
 state = "waiting"
 transitions = []
 packet_number = 0
-bin_data = []
-man_data = []
+man_data = ""
 
 for samp, mag, signal_val, avg in signal_gen():
 
-    if state is "waiting":
-        state_val = 0
-    elif state is "start":
-        state_val = 1
-    elif state is "sync":
-        state_val = 2
-    elif state is "preamble":
-        state_val = 3
-    elif state is "data":
-        state_val = 4
-    else:
-        state_val = 99
+    #if state is "waiting":
+    #    state_val = 0
+    #elif state is "start":
+    #    state_val = 1
+    #elif state is "sync":
+    #    state_val = 2
+    #elif state is "preamble":
+    #    state_val = 3
+    #elif state is "data":
+    #    state_val = 4
+    #else:
+    #    state_val = 99
 
-    states.write("%d    %.3f    %d    %d  %.3f\n"%(samp, mag, signal_val, state_val, avg))
+    #states.write("%d    %.3f    %d    %d  %.3f\n"%(samp, mag, signal_val, state_val, avg))
 
     transition = signal_val - last_signal_val
     last_signal_val = signal_val
@@ -124,7 +92,7 @@ for samp, mag, signal_val, avg in signal_gen():
             state = "start"
             log.info("entering start")
     elif state is not "data":
-        if (samp - last_signal_transition) > 100:
+        if (samp - last_signal_transition)/ sample_rate > 5*bit_time:
             log.info("%d  LOST SYNC GOING TO WAITING"%(samp))
             state = "waiting"
             signal_val = 0
@@ -176,9 +144,7 @@ for samp, mag, signal_val, avg in signal_gen():
             transitions.append(samp)
             log.info("DATA STARTING! @ %d next after %d", samp, clk_period * .60)
             state = "data"
-            del man_data[:]
-            del bin_data[:]
-            #man_data.append(0)
+            man_data = ""
 
     elif state is "data":
         time_since = (samp - transitions[-1]) / sample_rate
@@ -186,27 +152,19 @@ for samp, mag, signal_val, avg in signal_gen():
             log.info("DATA bit @ %d", samp)
             transitions.append(samp)
             if transition == 1:
-                bin_data.append(0)
-                bin_data.append(1)
-                man_data.append(1)
-                log.info("Got 1")
-            else:
-                bin_data.append(1)
-                bin_data.append(0)
-                man_data.append(0)
+                man_data += "0"
                 log.info("Got 0")
+            else:
+                man_data += "1"
+                log.info("Got 1")
         
         elif time_since > (clk_period * 1.5) and len(man_data) != 37:
-            print("BAD  Packet Number %2d @ %8d  = %s  man_bits =%d"%(packet_number, transitions[-1], packet2hex(man_data), len(man_data)))
-            #print("last transition = %d, current = %d"%(transitions[-1], samp))
-            #print("clk_period = ", clk_period)
+            print("BAD  Packet %2d @ %8d  = %s"%(packet_number, transitions[-1], packet2hex(man_data)))
             packet_number += 1
             state = "waiting"
 
         elif time_since > (clk_period * 1.5) and len(man_data) == 37:
             log.info("LOST SYNC GOING TO WAITING")
-            print("GOOD Packet Number %2d @ %8d  = %s  man_bits =%d"%(packet_number, transitions[-1], packet2hex(man_data), len(man_data)))
-            #print(" " + "".join([str(x) for x in bin_data]))
-            #print("  " + " ".join([str(x) for x in man_data]))
+            print("GOOD Packet %2d @ %8d  = %s"%(packet_number, transitions[-1], packet2hex(man_data)))
             packet_number += 1
             state = "waiting"

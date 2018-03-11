@@ -7,51 +7,27 @@ extern "C"
 #include <avr/io.h>
 #include <util/delay.h>
 
+
+/* iterate through prepend list stopping on the last element */
+#define PREPEND_LIST_LEN (2)
+uint8_t prepend_list[PREPEND_LIST_LEN] = {5, 7};
+uint8_t prepend_idx = 0;
+
+
+
 #define LED_DDR  DDRB
 #define LED_PORT PORTB
 #define LED      PINB5
-//LED_PORT ^= _BV(LED);
 
 CC1101 radio;
-CCPACKET rx_packet;
 CCPACKET tx_packet;
 
-
-#define LEN_OF_PACKET (10)
+#define PKTLEN (10)
 #define START_OF_DATA_OFFSET (1)
 #define LEN_OF_DATA (74)
 
-uint32_t fake_addrs[] = {0x931e19, 0x933c12, 0x93231a, 0x933d20};  // Winter
-//uint32_t actual_addrs[] = {0x6484c, 0x64877, 0x66b7b, 0x6a554}; // Summer
-
-
-/* Take two bits and convert it to a manchester value */
-uint8_t man_data_to_bin( uint8_t v0, uint8_t v1)
-{
-	if (( v0 == 1) && ( v1 == 0)) {
-		return 0;
-	}
-	else if (( v0 == 0) && ( v1 == 1)) {
-		return 1;
-	}
-
-	return 0xff;
-}
-
-uint64_t raw_packet_to_hex(uint8_t *packet)
-{
-	uint8_t v0, v1, i;
-	uint64_t hex_packet = 0;
-
-	for (i = START_OF_DATA_OFFSET; i < LEN_OF_DATA + START_OF_DATA_OFFSET; i+= 1) {
-		v0 = (packet[i/8] >> (7 - (i % 8 ))) & 1;
-		i += 1;
-		v1 = (packet[i/8] >> (7 - (i % 8 ))) & 1;
-		hex_packet = (hex_packet << 1) | man_data_to_bin(v0, v1);
-	}
-
-	return hex_packet;
-}
+uint32_t winter_addrs[] = {0x6CE1E6, 0x6CC3ED, 0x6CDCE5, 0x6CC2DF};
+//uint32_t summer_addrs[] = {0x795aab, ?0x799484?, ?0x79B788?, ?0x79B7B3?};
 
 struct tpms_packets {
    	uint8_t prepend;
@@ -59,46 +35,49 @@ struct tpms_packets {
    	uint16_t pressure;
 }; 
 
+/* Turn a 64-bit value of the packet into an array of ints
+ * This functions handles converting the binary data to manchester encoded
+ * data.
+ */
 uint8_t * hex_to_packetdata(uint64_t hexp)
 {
-	uint8_t v0, v1, k, d = 0;
+	uint8_t man_bit_0, man_bit_1, k, data_bit = 0;
 	int i;
-	static uint8_t data[10] = {0};
+	static uint8_t data[PKTLEN] = {0};
 
-	for (i = 0; i < 10; i++)
+	for (i = 0; i < PKTLEN; i++)
 		data[i] = 0;
 
 	/* 73 should be a div round down or something */
 	for (i = 73; i > 0; i-= 2) {
 		k = i;
-		d = hexp & 1;
+		data_bit = hexp & 1;
 		hexp = hexp >> 1;
 
-		if (d) {
-			v0 = 1;
-			v1 = 0;
+		if (data_bit) {
+			man_bit_0 = 0;
+			man_bit_1 = 1;
 		} else {
-			v0 = 0;
-			v1 = 1;
+			man_bit_0 = 1;
+			man_bit_1 = 0;
 		}
 
-		data[k/8] |= (v1 << (7 - (k % 8)));
+		data[k/8] |= (man_bit_1 << (7 - (k % 8)));
 		k+=1;
-		data[k/8] |= (v0 << (7 - (k % 8)));
+		data[k/8] |= (man_bit_0 << (7 - (k % 8)));
 	}
 
 	return data;
 }
 
 
+/* Convert a tpms_packet into an array of ints */
 uint8_t * struct_to_raw_packet( struct tpms_packets tppkt)
 {
 	uint64_t hex_pkt = 0;
 	hex_pkt |= (uint64_t)(tppkt.prepend) << 34;
 	hex_pkt |= (uint64_t)(tppkt.address) << 10;
 	hex_pkt |= tppkt.pressure;
-
-
 	return hex_to_packetdata(hex_pkt);
 }
 
@@ -111,43 +90,40 @@ uint8_t * struct_to_raw_packet( struct tpms_packets tppkt)
 
 
 void loop() {
-
-	int i, j;
-	uint8_t preps[9] = {2, 0,0,0,0,0,0,0};
-
-	for (j=0; j<8; j++){
+	int i;
 
 	for (i=0; i<4; i++){
-		//puts("Push key to send packets...\n");
-		//getchar();
-		printf("Sending packets to 0x%lx\n", fake_addrs[i]);
+		printf("Sending packets to 0x%lx\n", winter_addrs[i]);
 		struct tpms_packets tpms_packet;
-		tpms_packet.prepend=preps[j];
-		tpms_packet.address=fake_addrs[i];
-		tpms_packet.pressure=507;
-		//tpms_packet.pressure=305;
+		tpms_packet.prepend=prepend_list[prepend_idx];
+		tpms_packet.address=winter_addrs[i];
+		//tpms_packet.pressure=718;
+		tpms_packet.pressure=22 * 20; // Transmit 22 PSI
 	
 		uint8_t *txp = struct_to_raw_packet(tpms_packet);
 
-		/* Shut off sending of the preamble and syncwords, just send them by "hand" */
+		/* Fill in the wake pulse + timing pulses + wake pulse by hand */
 		tx_packet.data[0] = 0x07;
 		tx_packet.data[1] = 0xAA;
 		tx_packet.data[2] = 0xAA;
 		tx_packet.data[3] = 0xAA;
 		tx_packet.data[4] = 0xAF;
 
-		for ( int k = 0; k < 10; k++)
+		for ( int k = 0; k < PKTLEN; k++)
 			tx_packet.data[5+k] = *txp++;
 		tx_packet.length = 15;
 
-		radio.sendData(tx_packet);
-		_delay_ms(85);
+		/* When I recorded some data I found that it sends 8 packets in this pattern
+		 * pkt,85ms,pkt,135ms,pkt,185ms,pkt,135ms,pkt,135ms,pkt,85ms,pkt,85ms,pkt
+		 * So just replicate that
+		 */
+		LED_PORT |= _BV(LED);
 		radio.sendData(tx_packet);
 		_delay_ms(85);
 		radio.sendData(tx_packet);
 		_delay_ms(135);
 		radio.sendData(tx_packet);
-		_delay_ms(186);
+		_delay_ms(185);
 		radio.sendData(tx_packet);
 		_delay_ms(135);
 		radio.sendData(tx_packet);
@@ -155,10 +131,18 @@ void loop() {
 		radio.sendData(tx_packet);
 		_delay_ms(85);
 		radio.sendData(tx_packet);
-		_delay_ms(200);
+		_delay_ms(85);
+		radio.sendData(tx_packet);
+		LED_PORT &= ~_BV(LED);
+
+		/* Give some delay between different tires */
+		_delay_ms(2000);
 	}
-	_delay_ms(500);
-	}
+	_delay_ms(28000);
+
+	/* Increment the prepend list if we are not on the last item */
+	if( prepend_idx < (PREPEND_LIST_LEN - 1))
+		prepend_idx++;
 }
 
 int main(void) {
@@ -170,12 +154,13 @@ int main(void) {
 	LED_PORT &= ~_BV(LED);
 
 	puts("Hello world!\n");
-	//getchar();
 
 	radio.init();
 	puts("Initializing Radio\n");
-	puts("Starting on button press");
-
+	while(!uart_get_available() ) {
+		puts("Starting on button press");
+		_delay_ms(100);
+	}
 	getchar();
 
 	while (1)
