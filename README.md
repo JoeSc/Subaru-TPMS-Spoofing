@@ -140,6 +140,8 @@ With my four winter tires on and using the `tpms_sender_raw_gcc` application I w
 * Even though the waveforms of my spoofed packets versus actual packets look identical, perhpaps the TPMS receiver box is not receiving my packets
    * I have the cc1101 set to full output power, but maybe since I'm inside the cabin when sending, which is where the TPMS receiver is(rear left quarter panel), I'm saturating the receivers input.
    * Tape the receiving antenna from rtl_sdr to the rear left quarter panel and tweak cc1101 output power so the rtl_sdr sees the same power for cc1101 packets and tpms packets.
+   * I bought a tpms/rke box off of ebay for $20.  Looking up the [FCC docs](https://fccid.io/CWTWD1U781/Internal-Photos/Internal-Photo-1219147) it uses a [Toshiba ta31273](https://media.digikey.com/pdf/Data%20Sheets/Toshiba%20PDFs/ta31273fn.pdf) chip which is a AM receiver.  Pin 10 is data out.  My plan is to probe pin 10 while my car tires send data and when I spoof the packets to see if the receiver chip is receiving them.
+      * Hopefully I am just transmitting with too much power or something.
 
 [//]: # (# Final Step - Receiver and Send TPMS data using cc1101)
 [//]: # (The goal for this step is to create a tpms spoofer so that when I switch to summer wheels the tpms light will stay off.  The program will receive tpms messages, modify the address in the message and send a new message with the new address.  I could take the easy way out and just send out 32.0PSI for all four tires all the time, however I still wanted to keep the TPMS functionality since it may come in handy sometime.  I envision the flow of the program to be.)
